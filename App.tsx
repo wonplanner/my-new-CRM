@@ -94,14 +94,14 @@ const App: React.FC = () => {
     }
   }, [customers, userProfile?.isLoggedIn]);
 
-  // Fixed: simplified generateAiInsights to follow @google/genai guidelines
+  // generateAiInsights: 사용자의 요청에 따라 API 키를 직접 코드에 삽입했습니다.
   const generateAiInsights = async () => {
     if (customers.length === 0) return;
     
     setIsAiLoading(true);
     try {
-      // Correct: Use process.env.API_KEY directly in the constructor
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Vercel 환경 변수 이슈 해결을 위해 사용자가 제공한 실제 키 값을 사용합니다.
+      const ai = new GoogleGenAI({ apiKey: 'AIzaSyCp9NXuFW7Yhc2nwiuk2GeNlWp7wqHWgNY' });
       const prompt = `당신은 보험 설계사를 지원하는 시니어 비즈니스 컨설턴트입니다. 
       현재 등록된 고객 ${customers.length}명의 데이터를 바탕으로, 오늘 가장 우선순위가 높은 영업 활동 3가지를 제안해 주세요. 
       답변은 친절하고 전문적인 어조로 작성하며, 불필요한 서론은 생략하고 핵심만 전달하세요.`;
@@ -111,14 +111,14 @@ const App: React.FC = () => {
         contents: prompt,
       });
 
-      // Correct: Using response.text property (not method)
+      // API 응답에서 텍스트 추출 (.text 속성 사용)
       const result = response.text || "분석 결과를 생성하지 못했습니다.";
       const now = new Date().toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       
       setAiInsights(result);
       setLastAiUpdate(now);
       
-      // 캐시 저장
+      // 로컬 스토리지에 결과 캐싱
       localStorage.setItem('insure_planner_ai_cache', result);
       localStorage.setItem('insure_planner_ai_time', now);
       
