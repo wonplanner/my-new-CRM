@@ -1,48 +1,48 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Customer, CustomerStatus, Notice, UserProfile } from './types';
-import { STORAGE_KEY, INITIAL_CUSTOMERS, NOTICE_STORAGE_KEY, INITIAL_NOTICES } from './constants';
-import Sidebar from './components/Sidebar';
-import CustomerList from './components/CustomerList';
-import CustomerDetail from './components/CustomerDetail';
-import CustomerForm from './components/CustomerForm';
-import BulkSmsModal from './components/BulkSmsModal';
-import UsageGuideModal from './components/UsageGuideModal';
-import DataManagementView from './components/DataManagementView';
-import DashboardView from './components/DashboardView';
-import LoginModal from './components/LoginModal';
+import { CustomerStatus } from './types.js';
+import { STORAGE_KEY, INITIAL_CUSTOMERS, NOTICE_STORAGE_KEY, INITIAL_NOTICES } from './constants.js';
+import Sidebar from './components/Sidebar.js';
+import CustomerList from './components/CustomerList.js';
+import CustomerDetail from './components/CustomerDetail.js';
+import CustomerForm from './components/CustomerForm.js';
+import BulkSmsModal from './components/BulkSmsModal.js';
+import UsageGuideModal from './components/UsageGuideModal.js';
+import DataManagementView from './components/DataManagementView.js';
+import DashboardView from './components/DashboardView.js';
+import LoginModal from './components/LoginModal.js';
 import { GoogleGenAI } from "@google/genai";
 import { Plus, Search, RefreshCw, CloudCheck, CloudOff, Send, X as CloseIcon, Check } from 'lucide-react';
 
 const USER_PROFILE_KEY = 'insure_planner_user_profile';
 
-const App: React.FC = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [currentView, setCurrentView] = useState<'crm' | 'data'>('crm');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+const App = () => {
+  const [customers, setCustomers] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [currentView, setCurrentView] = useState('crm');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   
-  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [aiInsights, setAiInsights] = useState(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [lastAiUpdate, setLastAiUpdate] = useState<string | null>(null);
+  const [lastAiUpdate, setLastAiUpdate] = useState(null);
   
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSynced, setLastSynced] = useState<string | null>(null);
+  const [lastSynced, setLastSynced] = useState(null);
   const [showSaveToast, setShowSaveToast] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<CustomerStatus | '전체'>('전체');
-  const [birthMonth, setBirthMonth] = useState<string>('');
-  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState('전체');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
   
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ const App: React.FC = () => {
         const profile = JSON.parse(savedProfile);
         setUserProfile(profile);
         if (profile.isLoggedIn) setLastSynced(new Date().toLocaleTimeString());
-      } catch (e) { /* ignore */ }
+      } catch (e) {}
     }
     
     if (savedAi) setAiInsights(savedAi);
@@ -98,10 +98,9 @@ const App: React.FC = () => {
     
     setIsAiLoading(true);
     try {
+      // API Key must be obtained exclusively from process.env.API_KEY
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `당신은 보험 설계사를 지원하는 시니어 비즈니스 컨설턴트입니다. 
-      현재 등록된 고객 ${customers.length}명의 데이터를 바탕으로, 오늘 가장 우선순위가 높은 영업 활동 3가지를 제안해 주세요. 
-      답변은 친절하고 전문적인 어조로 작성하며, 불필요한 서론은 생략하고 핵심만 전달하세요.`;
+      const prompt = `당신은 보험 설계사를 지원하는 시니어 비즈니스 컨설턴트입니다. 현재 등록된 고객 ${customers.length}명의 데이터를 바탕으로, 오늘 가장 우선순위가 높은 영업 활동 3가지를 제안해 주세요. 답변은 친절하고 전문적인 어조로 작성하며, 핵심만 전달하세요.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -117,8 +116,8 @@ const App: React.FC = () => {
       localStorage.setItem('insure_planner_ai_cache', result);
       localStorage.setItem('insure_planner_ai_time', now);
       
-    } catch (error: any) {
-      const errorMsg = "네트워크 연결 또는 API 할당량을 확인해 주세요.";
+    } catch (error) {
+      const errorMsg = "네트워크 연결 또는 API 설정을 확인해 주세요.";
       setAiInsights(errorMsg);
     } finally {
       setIsAiLoading(false);
@@ -127,8 +126,7 @@ const App: React.FC = () => {
 
   const filteredCustomers = useMemo(() => {
     return customers.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           c.phone.includes(searchQuery);
+      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery);
       const matchesStatus = statusFilter === '전체' || c.status === statusFilter;
       const matchesBirthMonth = !birthMonth || (c.birthDate && c.birthDate.split('-')[1] === birthMonth);
       const matchesTag = !selectedTag || (c.contracts.some(con => con.tags.includes(selectedTag)));
@@ -147,7 +145,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    if (window.confirm('로그아웃 하시겠습니까? 데이터는 이 기기에 안전하게 보관됩니다.')) {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
       setUserProfile(null);
       setLastSynced(null);
       localStorage.removeItem(USER_PROFILE_KEY);
@@ -197,13 +195,6 @@ const App: React.FC = () => {
                   <h1 className="text-xl font-black text-gray-900 tracking-tight">
                     {isSelectionMode ? '발송 대상 선택' : '고객 데이터베이스'}
                   </h1>
-                  <div className="flex gap-2">
-                    {isSelectionMode && (
-                      <button onClick={toggleSelectionMode} className="p-2 bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors">
-                        <CloseIcon size={20} />
-                      </button>
-                    )}
-                  </div>
                 </div>
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -232,7 +223,7 @@ const App: React.FC = () => {
               {isSelectionMode && selectedIds.size > 0 && (
                 <div className="absolute bottom-20 left-4 right-4 z-50 animate-in slide-in-from-bottom-10">
                   <div className="ios-blur bg-blue-600/95 backdrop-blur-lg border border-white/20 shadow-2xl rounded-3xl p-4 flex items-center justify-between">
-                    <p className="text-white text-sm font-black pl-2">{selectedIds.size}명 선택</p>
+                    <p className="text-white text-sm font-black pl-2">{selectedIds.size}명 선택됨</p>
                     <button onClick={() => setIsSmsModalOpen(true)} className="bg-white text-blue-600 px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2">
                       <Send size={16} /> 발송하기
                     </button>
@@ -251,7 +242,7 @@ const App: React.FC = () => {
                   onClose={() => setSelectedCustomerId(null)} 
                   onEdit={() => { setEditingCustomer(selectedCustomer); setIsFormOpen(true); }} 
                   onDelete={() => {
-                    if (window.confirm('선택한 데이터를 삭제하시겠습니까?')) {
+                    if (window.confirm('삭제하시겠습니까?')) {
                       setCustomers(prev => prev.filter(c => c.id !== selectedCustomerId));
                       setSelectedCustomerId(null);
                     }
@@ -307,7 +298,7 @@ const App: React.FC = () => {
       {isGuideOpen && <UsageGuideModal onClose={() => setIsGuideOpen(false)} />}
       {isSmsModalOpen && (
         <BulkSmsModal 
-          selectedCustomers={Array.from(selectedIds).map(id => customers.find(c => c.id === id)!).filter(Boolean)} 
+          selectedCustomers={Array.from(selectedIds).map(id => customers.find(c => c.id === id)).filter(Boolean)} 
           onClose={() => setIsSmsModalOpen(false)} 
         />
       )}

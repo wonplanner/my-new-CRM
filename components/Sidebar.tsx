@@ -53,7 +53,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div className="flex flex-col h-full p-6">
-      {/* 계정 정보 카드 */}
       <div className="mb-8">
         <div className="group relative flex items-center gap-3 p-3 bg-gray-50 rounded-[28px] border border-gray-100 transition-all hover:bg-gray-100/50">
           <div className={`w-12 h-12 ${userProfile?.isLoggedIn ? 'bg-blue-600' : 'bg-gray-200'} rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/10 transition-all`}>
